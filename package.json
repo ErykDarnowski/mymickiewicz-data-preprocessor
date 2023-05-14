@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "description": "A data preprocessing tool for my AI Adam Mickiewicz (`MyMickiewicz`) model test.",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -21,5 +20,9 @@
     "adam-mickiewicz"
   ],
   "author": "Eryk Darnowski",
-  "license": "GPL-3.0"
+  "license": "GPL-3.0",
+  "dependencies": {
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.4"
+  }
 }
