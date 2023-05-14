@@ -1,0 +1,25 @@
+{
+  "name": "mymickiewicz-data-preprocessor",
+  "version": "0.0.0",
+  "description": "A data preprocessing tool for my AI Adam Mickiewicz (`MyMickiewicz`) model test.",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ml",
+    "ai",
+    "machine-learning",
+    "artificial-intelligence",
+    "data-set",
+    "data-preparation",
+    "data-preprocessing",
+    "books",
+    "lektury",
+    "wolnelektury",
+    "adam-mickiewicz"
+  ],
+  "author": "Eryk Darnowski",
+  "license": "GPL-3.0"
+}
