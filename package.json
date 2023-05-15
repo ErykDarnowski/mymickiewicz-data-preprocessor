@@ -4,7 +4,10 @@
   "description": "A data preprocessing tool for my AI Adam Mickiewicz (`MyMickiewicz`) model test.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+	"start": "npm run build && node ./dist/index.js",
+	"build": "rimraf ./dist && tsc",
+	"dev": "nodemon --on-change-only --watch ./src --ext ts ./src/index.ts",
+	"prettier": "prettier --write ."
   },
   "keywords": [
     "ml",
