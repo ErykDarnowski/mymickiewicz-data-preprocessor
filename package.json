@@ -1,36 +1,36 @@
 {
-  "name": "mymickiewicz-data-preprocessor",
-  "version": "0.0.0",
-  "description": "A data preprocessing tool for my AI Adam Mickiewicz (`MyMickiewicz`) model test.",
-  "main": "index.js",
-  "scripts": {
-	"start": "npm run build && node ./dist/index.js",
-	"build": "rimraf ./dist && tsc",
-	"dev": "nodemon --on-change-only --watch ./src --ext ts ./src/index.ts",
-	"prettier": "prettier --write ."
-  },
-  "keywords": [
-    "ml",
-    "ai",
-    "machine-learning",
-    "artificial-intelligence",
-    "data-set",
-    "data-preparation",
-    "data-preprocessing",
-    "books",
-    "lektury",
-    "wolnelektury",
-    "adam-mickiewicz"
-  ],
-  "author": "Eryk Darnowski",
-  "license": "GPL-3.0",
-  "dependencies": {
-    "rimraf": "^5.0.0",
-    "typescript": "^5.0.4"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.22",
-    "prettier": "^2.8.8",
-    "ts-node": "^10.9.1"
-  }
+	"name": "mymickiewicz-data-preprocessor",
+	"version": "0.0.0",
+	"description": "A data preprocessing tool for my AI Adam Mickiewicz (`MyMickiewicz`) model test.",
+	"main": "index.js",
+	"scripts": {
+		"start": "npm run build && node ./dist/index.js",
+		"build": "rimraf ./dist && tsc",
+		"dev": "nodemon --on-change-only --watch ./src --ext ts ./src/index.ts",
+		"prettier": "prettier --write ."
+	},
+	"keywords": [
+		"ml",
+		"ai",
+		"machine-learning",
+		"artificial-intelligence",
+		"data-set",
+		"data-preparation",
+		"data-preprocessing",
+		"books",
+		"lektury",
+		"wolnelektury",
+		"adam-mickiewicz"
+	],
+	"author": "Eryk Darnowski",
+	"license": "GPL-3.0",
+	"dependencies": {
+		"rimraf": "^5.0.0",
+		"typescript": "^5.0.4"
+	},
+	"devDependencies": {
+		"nodemon": "^2.0.22",
+		"prettier": "^2.8.8",
+		"ts-node": "^10.9.1"
+	}
 }
