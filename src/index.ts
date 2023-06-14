@@ -1,7 +1,7 @@
-import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 import * as t from 'io-ts';
+import fs, { promises as fsPromises } from 'fs';
 
 const config = {
 	textsLang: 'pol',
@@ -45,9 +45,25 @@ const TextDetailCodec = t.type({
  *     (slug) => `https://example.com/api/${slug}/`
  * ));
  * @example
+ * await Promise.all(await makeConcurrentHttpsReqs(
+ *         txtUrls,
+ *         10,
+ *         (acc, currRes) => {
+ * 	           const {
+ * 	               config: {url},
+ * 	        	   data
+ * 	            } = currRes;
+ *
+ *              acc.push(fsPromises.writeFile(path.join(outputRawPath, url.split('/').pop()), data));
+ *
+ *              return acc;
+ *         }
+ *     )
+ * );
+ * @example
  * console.log(await makeConcurrentHttpsReqs(
  *     slugs,
- *     10,
+ *     15,
  *     (acc, currRes) => {
  *         const { data } = currRes;
  *
@@ -135,7 +151,21 @@ const makeConcurrentHttpsReqs = async (
 			(slug) => `${config.apiBaseUrl}/books/${slug}/`
 		);
 
-		console.log(txtUrls);
+		// Download and write texts to files:
+		await Promise.all(
+			await makeConcurrentHttpsReqs(txtUrls, config.reqConcurrency, (acc, currRes) => {
+				const {
+					config: { url },
+					data: text,
+				} = currRes;
+
+				acc.push(fsPromises.writeFile(path.join(outputRawPath, url.split('/').pop()), text));
+
+				return acc;
+			})
+		);
+
+		console.log(fs.readdirSync(outputRawPath).length);
 	}
 
 	// Print execution time:
