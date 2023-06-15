@@ -25,6 +25,11 @@
 	"author": "Eryk Darnowski",
 	"license": "GPL-3.0",
 	"dependencies": {
+		"@types/cli-progress": "^3.11.0",
+		"axios": "^1.4.0",
+		"cli-progress": "^3.12.0",
+		"colorette": "^2.0.20",
+		"io-ts": "^2.2.20",
 		"rimraf": "^5.0.1",
 		"typescript": "^5.0.4"
 	},
