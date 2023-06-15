@@ -1,7 +1,9 @@
 import path from 'path';
 import axios from 'axios';
 import * as t from 'io-ts';
+import cliProgress from 'cli-progress';
 import fs, { promises as fsPromises } from 'fs';
+import { greenBright, yellow, red, bold } from 'colorette';
 
 const config = {
 	textsLang: 'pol',
@@ -12,6 +14,19 @@ const config = {
 
 const outputPath = path.join(__dirname, '..', 'output');
 const outputRawPath = path.join(outputPath, 'raw');
+const progBar = new cliProgress.SingleBar(
+	{
+		fps: 30,
+		hideCursor: true,
+		autopadding: true,
+		forceRedraw: true,
+		stopOnComplete: true,
+		format: `(${greenBright('{bar}')}) - ${bold(greenBright('{percentage}%'))} | ETA: ${bold(
+			greenBright('{eta}s')
+		)} | ${bold(greenBright('{value}/{total}'))}`,
+	},
+	cliProgress.Presets.shades_classic
+);
 
 const TextsDataCodec = t.array(
 	t.type({
@@ -34,6 +49,7 @@ const TextDetailCodec = t.type({
  * @param {string[]} urls - Array of URLs that the rqeuests will be performed on (or a string that will be formated in to an URL).
  * @param {number} concurrency - Number of concurrent requests.
  * @param {(accumulator: any[], currentAxiosResponseObj: any) => any[]} [processData] - Reduce function for processsing the responses.
+ * @param {(amount: number)} [updateProgress] - Function for tracking progress of requests externally (in a progress bar, value, etc.)
  * @param {(url: string) => string} [formatUrl] - Function for formatting the `urls` strings before performing requests.
  * @returns {Promise<any[]>} Results of the HTTPS requests / output of the `processData` function.
  *
@@ -61,27 +77,34 @@ const TextDetailCodec = t.type({
  *     )
  * );
  * @example
- * console.log(await makeConcurrentHttpsReqs(
- *     slugs,
- *     15,
- *     (acc, currRes) => {
- *         const { data } = currRes;
+ * const progBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+ * progBar.start(slugs.length, 0);
  *
- *         // Check properties:
- *         const { children, txt: txtUrl } = textDetailObj;
- *         if (children.length === 0) {
- *             acc.push(txtUrl);
- *         }
+ * const txtUrls = await makeConcurrentHttpsReqs(
+ *		   slugs,
+ *		   15,
+ *         (acc, currRes) => {
+ * 		       const { data: textDetailObj } = currRes;
  *
- *         return acc;
- *     },
- *     (slug) => `https://example.com/api/${slug}/`
- * ));
+ *             // Check the properties:
+ *             const textsDetailResult = TextDetailCodec.decode(textDetailObj);
+ *             if (textsDetailResult._tag === 'Right') {
+ *		           acc.push(textsDetailResult.right.txt);
+ *			   }
+ *
+ *             return acc;
+ *         },
+ *		   (amount) => { progBar.increment(amount) },
+ *         (slug) => `${config.apiBaseUrl}/books/${slug}/`,
+ * );
+ *
+ * progBar.stop();
  */
 const makeConcurrentHttpsReqs = async (
 	urls: string[],
 	concurrency: number,
 	processData?: (accumulator: any[], currentAxiosResponseObj: any) => any[],
+	updateProgress?: (amount: number) => void,
 	formatUrl?: (url: string) => string
 ): Promise<any[]> => {
 	let final: any[] = [];
@@ -98,6 +121,8 @@ const makeConcurrentHttpsReqs = async (
 				urlBatch.map((url) => axios.get(formatUrl ? formatUrl(url) : url, { timeout: 10000 }))
 			))
 		);
+
+		if (updateProgress) updateProgress(urlBatch.length);
 	}
 
 	if (processData) {
@@ -118,6 +143,8 @@ const makeConcurrentHttpsReqs = async (
 		// Create them:
 		fs.mkdirSync(outputRawPath, { recursive: true });
 
+		console.log(bold(greenBright('@ Getting text slugs')));
+
 		// Get texts data:
 		const { data: textsData } = await axios.get(
 			`${config.apiBaseUrl}/authors/${config.textsAuthor}/books/`,
@@ -132,6 +159,10 @@ const makeConcurrentHttpsReqs = async (
 
 		// Extract slugs from the response:
 		const slugs = textsDataResult.right.map((textObj) => textObj.slug);
+
+		console.log(bold(greenBright('\n@ Filtering out collections.')));
+
+		progBar.start(slugs.length, 0);
 
 		// Filter out collections of works and get URLs of single ones:
 		const txtUrls = await makeConcurrentHttpsReqs(
@@ -148,26 +179,38 @@ const makeConcurrentHttpsReqs = async (
 
 				return acc;
 			},
+			(amount) => {
+				progBar.increment(amount);
+			},
 			(slug) => `${config.apiBaseUrl}/books/${slug}/`
 		);
 
+		console.log(bold(greenBright('\n@ Downloading and writing texts.')));
+
+		progBar.start(txtUrls.length, 0);
+
 		// Download and write texts to files:
 		await Promise.all(
-			await makeConcurrentHttpsReqs(txtUrls, config.reqConcurrency, (acc, currRes) => {
-				const {
-					config: { url },
-					data: text,
-				} = currRes;
+			await makeConcurrentHttpsReqs(
+				txtUrls,
+				config.reqConcurrency,
+				(acc, currRes) => {
+					const {
+						config: { url },
+						data: text,
+					} = currRes;
 
-				acc.push(fsPromises.writeFile(path.join(outputRawPath, url.split('/').pop()), text));
+					acc.push(fsPromises.writeFile(path.join(outputRawPath, url.split('/').pop()), text));
 
-				return acc;
-			})
+					return acc;
+				},
+				(amount) => {
+					progBar.increment(amount);
+				}
+			)
 		);
-
-		console.log(fs.readdirSync(outputRawPath).length);
 	}
 
 	// Print execution time:
-	console.log(`\n@ Done in: ${(performance.now() - startTime).toFixed(2)} ms`);
+	console.log(yellow(`\n@ Done in: ${bold(red((performance.now() - startTime).toFixed(2)))} ms!`));
 })();
